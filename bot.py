@@ -7,6 +7,7 @@ import requests
 from pyzbar.pyzbar import decode
 from PIL import Image
 import sqlite3
+from reg_user import add_user, add_user_product
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -27,11 +28,32 @@ def get_data_with_barcode(barcode_str = '5000159461122'):
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup()
+    bot.send_message(message.chat.id, "Нам потрібен ваш номер телефону")
+    # markup.add(types.KeyboardButton(text="Дати номер телефону.", request_contact=True))
+    markup.add(types.KeyboardButton('Оборот по магазинам'))
+    # bot.register_next_step_handler(message, register_user_number)
     # markup.add(types.KeyboardButton('Порівняти ціну на товар'))
-    markup.add(types.KeyboardButton('Нам потрібер ваш номер телефону.'))
+    # markup.add(types.KeyboardButton('Нам потрібер ваш номер телефону.'))
+    # bot.send_message(message.chat.id, "Нам потрібер ваш номер телефону.", reply_markup=markup)
     # markup.add(types.KeyboardButton('Порівняти ціну на корзину'))
-    # markup.add(types.KeyboardButton('Оборот по магазинам'))
-    bot.send_message(message.chat.id, "Оберіть Опцію.", reply_markup=markup)
+    #
+    # bot.send_message(message.chat.id, "Оберіть Опцію.", reply_markup=markup)
+
+# @bot.message_handler(types=['text'])
+
+# def register_user_number(message):
+
+    # phone_number = message.contact.phone_number
+    # user_id = message.contact.user_id
+    # print(user_id)
+    # add_user(user_id, phone_number)
+    # markup=types.ReplyKeyboardMarkup()
+    # markup.add(types.KeyboardButton('Порівняти ціну на товар'))
+    # bot.send_message(message.chat.id, "Дякую, тепер оберіть опцію.", reply_markup=markup)
+ls
+
+
+
 
 @bot.message_handler(func=lambda message: 'Порівняти ціну на товар' == message.text)
 def compare_one_product(message):
@@ -39,16 +61,16 @@ def compare_one_product(message):
     bot.register_next_step_handler(message, handle_file)
     # file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?".http_build_query($data) );
     # bot.send_message(message.chat.id, )
-
-
-@bot.message_handler(func=lambda message: 'Нам потрібер ваш номер телефону.' == message.text)
-def compare_one_product(message):
-    user_info = users.getFullUser(message.from_user.id)
-    print(user_info)
-    # bot.send_message(message.chat.id,  message.contact.phone_number)
-    bot.register_next_step_handler(message, handle_file)
-    # file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?".http_build_query($data) );
-    # bot.send_message(message.chat.id, )
+#
+#
+# @bot.message_handler(func=lambda message: 'Нам потрібер ваш номер телефону.' == message.text)
+# def compare_one_product(message):
+#     # user_info = users.getFullUser(message.from_user.id)
+#     print(userStep)
+#     # bot.send_message(message.chat.id,  message.contact.phone_number)
+#     bot.register_next_step_handler(message, handle_file)
+#     # file_get_contents("https://api.telegram.org/bot$apiToken/sendMessage?".http_build_query($data) );
+#     # bot.send_message(message.chat.id, )
 
 
 
