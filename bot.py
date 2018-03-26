@@ -7,9 +7,20 @@ import requests
 from pyzbar.pyzbar import decode
 from PIL import Image
 import sqlite3
-from reg_user import add_user, add_user_product
+# from reg_user import add_user, add_user_product
 
 bot = telebot.TeleBot(TOKEN)
+
+def user_in_db(uid):
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    c.execute('''SELECT * FROM users WHERE uid=%s''' % str(uid))
+    res = c.fetchall()
+    if len(res) > 0:
+        return True
+    else:
+        return False
 
 
 def get_data_with_barcode(barcode_str = '5000159461122'):
@@ -25,13 +36,15 @@ def get_data_with_barcode(barcode_str = '5000159461122'):
     return c.fetchall()
 
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup()
-    bot.send_message(message.chat.id, "Нам потрібен ваш номер телефону")
-    # markup.add(types.KeyboardButton(text="Дати номер телефону.", request_contact=True))
-    markup.add(types.KeyboardButton('Оборот по магазинам'))
-    # bot.register_next_step_handler(message, register_user_number)
+    markup.add(types.KeyboardButton(text="Дати номер телефону.", request_contact=True))
+    if user_in_db(message.from_user.id):
+        bot.send_message(message.chat.id, "Оберіть Опцію")
+    else:
+        bot.send_message(message.chat.id, "Нам потрібен ваш номер телефону",reply_markup=markup)
+        bot.register_next_step_handler(message, register_user_number)
     # markup.add(types.KeyboardButton('Порівняти ціну на товар'))
     # markup.add(types.KeyboardButton('Нам потрібер ваш номер телефону.'))
     # bot.send_message(message.chat.id, "Нам потрібер ваш номер телефону.", reply_markup=markup)
@@ -41,16 +54,44 @@ def send_welcome(message):
 
 # @bot.message_handler(types=['text'])
 
-# def register_user_number(message):
 
-    # phone_number = message.contact.phone_number
-    # user_id = message.contact.user_id
+def add_user(uid, phone_number):
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    c.execute('''SELECT phone_number FROM users WHERE uid=%s''' % str(uid))
+    res = c.fetchall()
+
+    if not len(res):
+        c.execute('''INSERT INTO users VALUES (%s, %s)''' % (str(uid), phone_number))
+    # else:
+    conn.commit()
+
+def show_user(uid):
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+
+    c.execute('''SELECT * FROM users WHERE uid=%s''' % uid)
+    res = c.fetchall()
+    # print(res)
+    conn.commit()
+    return res
+
+def register_user_number(message):
+
+    phone_number = message.contact.phone_number
+    user_id = message.contact.user_id
     # print(user_id)
-    # add_user(user_id, phone_number)
-    # markup=types.ReplyKeyboardMarkup()
-    # markup.add(types.KeyboardButton('Порівняти ціну на товар'))
-    # bot.send_message(message.chat.id, "Дякую, тепер оберіть опцію.", reply_markup=markup)
-ls
+    # print(type(phone_number))
+    add_user(user_id, phone_number)
+    # a = show_user(391727814)
+    # print(a)
+    markup=types.ReplyKeyboardMarkup()
+    markup.add(types.KeyboardButton('Порівняти ціну на товар'))
+    bot.send_message(message.chat.id, "Дякую, тепер оберіть опцію.", reply_markup=markup)
+
 
 
 
@@ -73,6 +114,24 @@ def compare_one_product(message):
 #     # bot.send_message(message.chat.id, )
 
 
+def add_user_product(uid, barcode):
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''INSERT INTO user_product VALUES (%s, %s)''' % (str(uid), barcode))
+    conn.commit()
+    # result = c.fetchall()
+    # print(result)
+
+
+def get_products_with_user(uid):
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''SELECT * FROM user_product WHERE user_id=%s''' % uid)
+    res = c.fetchall()
+    # print(res)
+    conn.commit()
+    return res
+
 
 def handle_file(message):
     if message.photo:
@@ -89,7 +148,10 @@ def handle_file(message):
                 # print(tmp)
                 decoded_barcode = str(tmp[0].data, 'utf-8')
                 # print(decoded_barcode)
-
+                # print(message.from_user.id)
+                user_id = message.from_user.id
+                add_user_product(user_id, decoded_barcode)
+                print(get_products_with_user(user_id))
                 result = get_data_with_barcode(decoded_barcode)
                 if result is None:
                     bot.send_message(message.chat.id, 'No result')
@@ -100,7 +162,6 @@ def handle_file(message):
                     my_str += '%s: %s\n' % (item[0], item[1])
                 bot.send_message(message.chat.id, my_str)
                 bot.send_message(message.chat.id, "Оберіть Опцію")
-
 
 
 bot.polling()

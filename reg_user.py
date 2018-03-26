@@ -12,7 +12,7 @@ c = conn.cursor()
 
 
 def add_user(uid, phone_number):
-    c.execute('''SELECT phone_number FROM users WHERE uid=%s''' % uid)
+    c.execute('''SELECT phone_number FROM users WHERE uid=%s''' % str(uid))
     res = c.fetchall()
 
     if not len(res):
@@ -42,6 +42,7 @@ def get_products_with_user(uid):
     print(res)
     conn.commit()
     return res
+
 #
 # c.execute('''DELETE  FROM user_product''' )
 # c.execute('''DELETE  FROM users''' )
@@ -57,3 +58,13 @@ def get_products_with_user(uid):
 # add_user_product(32131, "935032694")
 #
 # get_products_with_user(32131)
+# 48.291342, 25.936575
+
+
+import requests, json
+
+api_key = 'AIzaSyBZkdLwnJT8z_0EcS5CYNwsDPWDikvzuqo'
+url = '''https://maps.googleapis.com/maps/api/distancematrix/json?origins=48.291342,25.936575&destinations=48.291983,25.940850&key=%s''' % api_key
+
+result = requests.get(url)
+print(json.loads(result.text)['rows'][0]['elements'][0]['distance']['text'])
