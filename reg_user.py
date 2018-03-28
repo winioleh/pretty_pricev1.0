@@ -59,12 +59,13 @@ def get_products_with_user(uid):
 #
 # get_products_with_user(32131)
 # 48.291342, 25.936575
-
+c.execute('DELETE FROM users')
+conn.commit()
 
 import requests, json
 
 api_key = 'AIzaSyBZkdLwnJT8z_0EcS5CYNwsDPWDikvzuqo'
-url = '''https://maps.googleapis.com/maps/api/distancematrix/json?origins=48.291342,25.936575&destinations=48.291983,25.940850&key=%s''' % api_key
-
+url = '''https://maps.googleapis.com/maps/api/distancematrix/json?origins=25.936889,48.270142&destinations=48.296699,25.898772&key=%s''' % api_key
+      # 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=25.936889,48.270142&destinations=48.296699,25.898772&key=AIzaSyBZkdLwnJT8z_0EcS5CYNwsDPWDikvzuqo'
 result = requests.get(url)
 print(json.loads(result.text)['rows'][0]['elements'][0]['distance']['text'])
