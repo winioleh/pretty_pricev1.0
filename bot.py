@@ -1,13 +1,14 @@
 import telebot, os
 from telebot import types
-from settings import TOKEN
 import requests
 from pyzbar.pyzbar import decode
 from PIL import Image
 import sqlite3
 import json
 
+TOKEN = '535846211:AAGZo7FNi0wRlLNBTWXRVxHYmyNjrkHOTVA'
 bot = telebot.TeleBot(TOKEN)
+
 
 def get_distance(u_latitude, u_longitude, shop_name):
 
