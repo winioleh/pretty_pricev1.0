@@ -2,7 +2,7 @@ import urllib
 from bs4 import BeautifulSoup
 import re
 import requests
-from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
+# from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
 
 def tmp_geting_data(product_bar_code = '7622210176196'):
     fozzyUrl = 'https://fozzy.zakaz.ua/ru/?q=0'

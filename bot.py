@@ -1,3 +1,5 @@
+import traceback
+
 import telebot, os
 from telebot import types
 import requests
@@ -5,6 +7,7 @@ from pyzbar.pyzbar import decode
 from PIL import Image
 import sqlite3
 import json
+import time
 from test import tmp_geting_data
 # from geting_data import get_a_comparison
 
@@ -32,7 +35,7 @@ def handle_contact(message):
     phone_number = message.contact.phone_number
     user_id = message.contact.user_id
     markup = types.ReplyKeyboardMarkup()
-    add_user(user_id, phone_number)
+    #add_user(user_id, phone_number)
     markup.add(types.KeyboardButton(text=u"Дати доступ до геолокації.", request_location=True))
     bot.send_message(message.chat.id, u"Нам потрібена ваша геолокація", reply_markup=markup)
     # bot.register_next_step_handler(message, get_location)
@@ -203,6 +206,8 @@ def compare_one_product(message):
     bot.send_message(message.chat.id, u"Загрузіть фото штрих коду")
     bot.register_next_step_handler(message, handle_file)
 
+try:
 
-
-bot.polling()
+    bot.polling(none_stop=True)
+except Exception as e:
+    time.sleep(15)
