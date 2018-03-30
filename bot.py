@@ -14,10 +14,13 @@ from test import tmp_geting_data
 
 TOKEN = '594661078:AAEYBoTw7zehPDkjtB6J572ly7IUvPq4m3s'
 bot = telebot.TeleBot(TOKEN)
-conn = sqlite3.connect('users.db')
-c = conn.cursor()
-c.execute('DELETE FROM users')
-conn.commit()
+# conn = sqlite3.connect('users.db')
+
+# c.execute('CREATE TABLE users ')
+
+# c = conn.cursor()
+# c.execute('DELETE FROM users')
+# conn.commit()
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -170,15 +173,15 @@ def get_distance(u_latitude, u_longitude, shop_name):
     return json.loads(result.text)['rows'][0]['elements'][0]['distance']['text']
 
 def user_in_db(uid):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-
-    c.execute('''SELECT * FROM users WHERE uid=%s''' % str(uid))
-    res = c.fetchall()
+    # conn = sqlite3.connect('users.db')
+    # c = conn.cursor()
+    #
+    # c.execute('''SELECT * FROM users WHERE uid=%s''' % str(uid))
+    # res = c.fetchall()
     if len(res) > 0:
         return True
     else:
-        return False
+        return True
 
 
 def get_data_with_barcode(barcode_str = '5000159461122'):
