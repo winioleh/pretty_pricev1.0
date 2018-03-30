@@ -14,10 +14,10 @@ from test import tmp_geting_data
 
 TOKEN = '594661078:AAEYBoTw7zehPDkjtB6J572ly7IUvPq4m3s'
 bot = telebot.TeleBot(TOKEN)
-# conn = sqlite3.connect('users.db')
-# c = conn.cursor()
-# c.execute('DELETE FROM users')
-# conn.commit()
+conn = sqlite3.connect('users.db')
+c = conn.cursor()
+c.execute('DELETE FROM users')
+conn.commit()
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -122,7 +122,7 @@ def handle_file(message):
                 # print(tmp)
                 decoded_barcode = str(tmp[0].data, 'utf-8')
                 user_id = message.from_user.id
-                add_user_product(user_id, decoded_barcode)
+                # add_user_product(user_id, decoded_barcode)
                 # result = get_data_with_barcode(decoded_barcode)
                 # result = search_price(decoded_barcode)
 
