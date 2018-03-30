@@ -14,13 +14,15 @@ from test import tmp_geting_data
 
 TOKEN = '594661078:AAEYBoTw7zehPDkjtB6J572ly7IUvPq4m3s'
 bot = telebot.TeleBot(TOKEN)
-# conn = sqlite3.connect('users.db')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+conn = sqlite3.connect(dir_path+'/users.db')
 
 # c.execute('CREATE TABLE users ')
 
 # c = conn.cursor()
 # c.execute('DELETE FROM users')
 # conn.commit()
+#
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
@@ -38,7 +40,7 @@ def handle_contact(message):
     phone_number = message.contact.phone_number
     user_id = message.contact.user_id
     markup = types.ReplyKeyboardMarkup()
-    #add_user(user_id, phone_number)
+    add_user(user_id, phone_number)
     markup.add(types.KeyboardButton(text=u"Дати доступ до геолокації.", request_location=True))
     bot.send_message(message.chat.id, u"Нам потрібена ваша геолокація", reply_markup=markup)
     # bot.register_next_step_handler(message, get_location)
@@ -70,7 +72,7 @@ def send_welcome(message):
 
 def add_user(uid, phone_number):
 
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(dir_path+'/users.db')
     c = conn.cursor()
 
 
@@ -84,7 +86,7 @@ def add_user(uid, phone_number):
 
 def show_user(uid):
 
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(dir_path+'/users.db')
     c = conn.cursor()
 
     c.execute('''SELECT * FROM users WHERE uid=%s''' % uid)
@@ -93,13 +95,13 @@ def show_user(uid):
     return res
 
 def add_user_product(uid, barcode):
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(dir_path+'/users.db')
     c = conn.cursor()
     c.execute('''INSERT INTO user_product VALUES (%s, %s)''' % (str(uid), barcode))
     conn.commit()
 
 def get_products_with_user(uid):
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect(dir_path+'/users.db')
     c = conn.cursor()
     c.execute('''SELECT * FROM user_product WHERE user_id=%s''' % uid)
     res = c.fetchall()
@@ -110,15 +112,15 @@ def get_products_with_user(uid):
 @bot.message_handler(content_types=['photo'])
 def handle_file(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.add(types.KeyboardButton(text=u"Повернутись до вибору опції."))
+    # markup.add(types.KeyboardButton(text=u"Повернутись до вибору опції."))
     if message.photo:
         file_id = message.photo[-1].file_id
         file_info = bot.get_file(file_id)
         file = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
 
-        with open('imgs/out.png', 'wb') as f:
+        with open(dir_path+'/imgs/out.png', 'wb') as f:
             f.write(file.content)
-            tmp = decode(Image.open("imgs/out.png"))
+            tmp = decode(Image.open(dir_path+"/imgs/out.png"))
             if not tmp:
                 bot.send_message(message.chat.id, u'Штрих код не знайдено, спробуйте ще раз')
             else:
@@ -150,15 +152,15 @@ def handle_file(message):
                     for item in result:
                         my_str += '%s: %s\n' % (item['name'], item['price'])
                     bot.send_message(message.chat.id, my_str)
-                    bot.send_message(message.chat.id, u"Оберіть Опцію")
-
+                    # bot.send_message(message.chat.id, u"Оберіть Опцію", reply_markup=markup)
+                    choose_option(message)
     # elif message.text != '/start':
     #     bot.send_message(message.chat.id, u'Для визначення товару, нам потрібен штрих код, загрузіть фото штрихкоду.')
     #     bot.register_next_step_handler(message, handle_file)
 
 def get_distance(u_latitude, u_longitude, shop_name):
 
-    conn = sqlite3.connect('test.db')
+    conn = sqlite3.connect(dir_path+'/test.db')
     c = conn.cursor()
     c.execute("SELECT latitude, longitude FROM shop WHERE name='%s'" % shop_name)
     res = c.fetchall()
@@ -173,19 +175,19 @@ def get_distance(u_latitude, u_longitude, shop_name):
     return json.loads(result.text)['rows'][0]['elements'][0]['distance']['text']
 
 def user_in_db(uid):
-    # conn = sqlite3.connect('users.db')
-    # c = conn.cursor()
-    #
-    # c.execute('''SELECT * FROM users WHERE uid=%s''' % str(uid))
-    # res = c.fetchall()
+    conn = sqlite3.connect(dir_path+'/users.db')
+    c = conn.cursor()
+
+    c.execute('''SELECT * FROM users WHERE uid=%s''' % str(uid))
+    res = c.fetchall()
     if len(res) > 0:
         return True
     else:
-        return True
+        return False
 
 
 def get_data_with_barcode(barcode_str = '5000159461122'):
-    conn = sqlite3.connect('test.db')
+    conn = sqlite3.connect(dir_path+'/test.db')
 
     c = conn.cursor()
 
@@ -197,17 +199,101 @@ def get_data_with_barcode(barcode_str = '5000159461122'):
     return c.fetchall()
 
 def choose_option(message):
-    print('choose_location_log')
+    # print('choose_location_log')
     markup = types.ReplyKeyboardMarkup()
 
     markup.add(types.KeyboardButton(u'Порівняти ціну на товар'))
+    markup.add(types.KeyboardButton(u'Порівняти ціну на корзину'))
     bot.send_message(message.chat.id, u"Оберіть Опцію", reply_markup=markup)
+    # basket_barcodes_list = []
+
     # bot.register_next_step_handler(message,check_option)
+
 
 @bot.message_handler(func=lambda message: u'Порівняти ціну на товар' == message.text)
 def compare_one_product(message):
     bot.send_message(message.chat.id, u"Загрузіть фото штрих коду")
-    bot.register_next_step_handler(message, handle_file)
+# bot.register_next_step_handler(message, handle_file)
+# global basket_barcodes_list
+
+class Basket:
+
+    basket_barcodes_list = []
+    def __init__(self):
+        pass
+    def add(self, item):
+        self.basket_barcodes_list.append(item)
+    def get_result(self):
+        result = {}
+        for item in self.basket_barcodes_list:
+            for shop in item:
+                result[shop['name']] = 0
+        for item in self.basket_barcodes_list:
+            for shop in item:
+                if shop['price'] == 'немає в наявності' or result[shop['name']] == 'Деякого товару немає в наявності':
+                    result[shop['name']] = 'Деякого товару немає в наявності'
+                else:
+                    result[shop['name']] += float(shop['price'])
+        res_str = 'Ціни на обрану корзину:\n'
+        for name, price in result.items():
+            if type(price) != str:
+                res_str += name + ' - ' + '%.2f' % price + '\n'
+            else:
+                res_str += name + ' - ' + price + '\n'
+        return res_str
+    def clear_basket(self):
+        self.basket_barcodes_list = []
+global my_basket
+@bot.message_handler(func=lambda message: u'Порівняти ціну на корзину' == message.text)
+def compare_basket(message):
+    if message.text != 'Досить':
+        time.sleep(2)
+        markup = types.ReplyKeyboardMarkup()
+        markup.add(types.KeyboardButton(u'Додати ще один товар'))
+        markup.add(types.KeyboardButton(u'Досить'))
+        bot.send_message(message.chat.id, u"Загрузіть фото штрих коду", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_basket_file)
+        # handle_basket_file(message)
+    # if message.text == 'Досить':
+    #     bot.register_next_step_handler(message,handle_basket_stop)
+def handle_basket_file(message):
+    # markup = types.ReplyKeyboardMarkup()
+    if message.photo:
+
+        file_id = message.photo[-1].file_id
+        file_info = bot.get_file(file_id)
+        file = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
+
+        with open(dir_path + '/imgs/out.png', 'wb') as f:
+            f.write(file.content)
+            tmp = decode(Image.open(dir_path + "/imgs/out.png"))
+            if not tmp:
+                bot.send_message(message.chat.id, u'Штрих код не знайдено, спробуйте ще раз')
+            else:
+                decoded_barcode = str(tmp[0].data, 'utf-8')
+                user_id = message.from_user.id
+                # basket_barcodes_list.append(tmp_geting_data(decoded_barcode))
+                my_basket.add(tmp_geting_data(decoded_barcode))
+                bot.register_next_step_handler(message,compare_basket)
+    if message.text:
+        handle_basket_stop(message)
+        return
+my_basket = Basket()
+
+@bot.message_handler(func=lambda message: u'Досить' == message.text)
+def handle_basket_stop(message):
+    res_str = my_basket.get_result()
+    print(res_str)
+    markup = types.ReplyKeyboardMarkup()
+    markup.add(types.KeyboardButton(u'Порівняти ціну на товар'))
+    markup.add(types.KeyboardButton(u'Порівняти ціну на корзину'))
+    bot.send_message(message.chat.id, res_str, reply_markup=markup)
+    my_basket.clear_basket()
+
+@bot.message_handler(func=lambda message: u'Повернутись до виботу опції.' == message.text)
+def handle_basket_stop(message):
+    choose_option(message)
+
 
 try:
 
